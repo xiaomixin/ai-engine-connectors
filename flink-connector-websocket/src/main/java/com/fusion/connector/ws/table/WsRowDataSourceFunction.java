@@ -5,7 +5,6 @@ import com.fusion.connector.ws.entity.WsTableConfig;
 import com.fusion.connector.ws.protocol.*;
 import com.fusion.connector.ws.source.BoundedBackpressureController;
 import com.fusion.connector.ws.source.NormalizedEvent;
-import com.fusion.connector.ws.transport.FakeWsClientEngine;
 import com.fusion.connector.ws.transport.JdkHttpClientWsEngine;
 import com.fusion.connector.ws.transport.WsClientEngine;
 import org.apache.flink.api.common.functions.OpenContext;
