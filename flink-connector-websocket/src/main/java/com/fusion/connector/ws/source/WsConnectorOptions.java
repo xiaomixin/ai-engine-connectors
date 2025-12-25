@@ -39,7 +39,6 @@ public final class WsConnectorOptions {
                     .intType()
                     .defaultValue(2_000);
 
-    // ---- Future: reconnect/timeout/format/auth etc. (placeholder) ----
     public static final ConfigOption<Integer> WS_CONNECT_TIMEOUT_MS =
             ConfigOptions.key("ws.connect.timeout.ms")
                     .intType()

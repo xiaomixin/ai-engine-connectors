@@ -1,19 +1,21 @@
 package com.fusion.connector.ws.source;
 
-import com.fusion.connector.ws.entity.UnknownChannelPolicy;
+import com.fusion.connector.ws.entity.WsEnvelope;
 import com.fusion.connector.ws.entity.WsTableConfig;
+import com.fusion.connector.ws.mapping.ChannelRowMapper;
+import com.fusion.connector.ws.mapping.RowMapperFactory;
 import com.fusion.connector.ws.protocol.*;
 import com.fusion.connector.ws.transport.HttpWsClientEngine;
 import com.fusion.connector.ws.transport.WsClientEngine;
 import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.streaming.api.functions.source.legacy.RichSourceFunction;
-import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.RowType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -27,8 +29,9 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
 
     private transient WsClientEngine engine;
     private transient ProtocolAdapter<WsTableConfig> adapter;
+    private transient ChannelRowMapper rowMapper;
 
-    private transient ArrayBlockingQueue<NormalizedEvent> queue;
+    private transient ArrayBlockingQueue<RowData> queue;
     private transient BoundedBackpressureController backpressure;
 
 
@@ -42,9 +45,10 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
         this.queue = new ArrayBlockingQueue<>(cfg.queueCapacity());
         this.backpressure = new BoundedBackpressureController(cfg.requestBatch());
 
-        DecoderRegistry<WsTableConfig> reg = new DecoderRegistry<>();
-        reg.register(new L2BookDecoder());
-        this.adapter = new HyperliquidWsAdapter(reg, UnknownChannelPolicy.DROP);
+        RowType rowType = (RowType) producedDataType.getLogicalType();
+        this.rowMapper = RowMapperFactory.create(cfg.channel(), rowType);
+
+        this.adapter = new HyperliquidWsAdapter();
         this.engine = new HttpWsClientEngine(cfg.url(), 10_000);
         this.engine.setListener(new WsClientEngine.WsMessageListener() {
             @Override
@@ -63,8 +67,14 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
                     return;
                 }
                 backpressure.onWsMessageArrived();
-                for (NormalizedEvent event : adapter.decode(cfg, message)) {
-                    if(!queue.offer(event)) break;
+                WsEnvelope envelope = adapter.parseEnvelope(message);
+                if(envelope == null || envelope.data() == null){
+                    LOG.warn("Failed to parse message or empty data: {}", message);
+                    return;
+                }
+                List<RowData> mappedRows = rowMapper.map(envelope.data());
+                for (RowData row : mappedRows) {
+                    if(!queue.offer(row)) break;
                 }
                 tryRequestMore();
             }
@@ -86,9 +96,7 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
     private void tryRequestMore() {
         if(!running || engine == null || !engine.isOpen()) return;
         int remainingCapacity = queue.remainingCapacity();
-        LOG.info("Remaining Capacity: {}", remainingCapacity);
         int toRequest = backpressure.computeToRequest(remainingCapacity);
-        LOG.info("To Request: {}", toRequest);
         if(toRequest > 0){
             engine.request(toRequest);
         }
@@ -97,27 +105,16 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
     @Override
     public void run(SourceContext<RowData> ctx) throws Exception {
         while (running) {
-            NormalizedEvent event = queue.poll(200, TimeUnit.MICROSECONDS);
-            if(event == null){
+            RowData rowData = queue.poll(200, TimeUnit.MICROSECONDS);
+            if(rowData == null){
                 tryRequestMore();
                 continue;
             }
-            RowData raw = toRowData(event);
             synchronized (ctx.getCheckpointLock()) {
-                ctx.collect(raw);
+                ctx.collect(rowData);
             }
             tryRequestMore();
         }
-    }
-
-    private RowData toRowData(NormalizedEvent event) {
-        GenericRowData row = new GenericRowData(5);
-        row.setField(0, StringData.fromString(event.source()));
-        row.setField(1, StringData.fromString(event.channel()));
-        row.setField(2, StringData.fromString(event.symbol()));
-        row.setField(3, event.eventTimeMs());
-        row.setField(4, StringData.fromString(event.payloadJson()));
-        return row;
     }
 
     @Override

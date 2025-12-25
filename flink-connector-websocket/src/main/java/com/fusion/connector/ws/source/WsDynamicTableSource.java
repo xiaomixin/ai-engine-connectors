@@ -34,7 +34,6 @@ public class WsDynamicTableSource implements ScanTableSource {
     @Override
     public DynamicTableSource copy() {
         return new WsDynamicTableSource(cfg, producedDataType);
-
     }
 
     @Override
