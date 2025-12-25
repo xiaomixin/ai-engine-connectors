@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+rules:
+  - Implement the code with good structure and code clean
+  - Always try best to use the simplest and most extendible solution when writing the code
+  - Always remember to use ResponseUtil to format the response.
+  - Reduce too many comment or explaination, good naming of the class / method is already an comment
+---
