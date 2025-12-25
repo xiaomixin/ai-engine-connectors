@@ -4,6 +4,8 @@ import com.fusion.connector.ws.entity.WsTableConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class FakeWsClientEngine implements WsClientEngine {
@@ -12,6 +14,7 @@ public class FakeWsClientEngine implements WsClientEngine {
     private final WsTableConfig wsTableConfig;
 
     private final AtomicBoolean open = new AtomicBoolean(false);
+    private final ExecutorService dispatcher = Executors.newSingleThreadExecutor();
     private long seq = 0;
 
     public FakeWsClientEngine(WsTableConfig wsTableConfig) {

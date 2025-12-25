@@ -88,6 +88,23 @@
                 <version>${flink.version}</version>
             </dependency>
 
+            <!-- Jackson Dependencies (aligned with Flink 2.1.1 - uses Jackson 2.13.x) -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.13.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.13.5</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.13.5</version>
+            </dependency>
+
             <!-- Scala Dependencies -->
             <dependency>
                 <groupId>org.scala-lang</groupId>
