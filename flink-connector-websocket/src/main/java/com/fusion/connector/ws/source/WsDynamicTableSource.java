@@ -1,4 +1,4 @@
-package com.fusion.connector.ws.table;
+package com.fusion.connector.ws.source;
 
 import com.fusion.connector.ws.entity.WsTableConfig;
 import org.apache.flink.legacy.table.connector.source.SourceFunctionProvider;

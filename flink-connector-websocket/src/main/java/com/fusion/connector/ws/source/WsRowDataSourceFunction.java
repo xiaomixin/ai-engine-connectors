@@ -1,11 +1,9 @@
-package com.fusion.connector.ws.table;
+package com.fusion.connector.ws.source;
 
 import com.fusion.connector.ws.entity.UnknownChannelPolicy;
 import com.fusion.connector.ws.entity.WsTableConfig;
 import com.fusion.connector.ws.protocol.*;
-import com.fusion.connector.ws.source.BoundedBackpressureController;
-import com.fusion.connector.ws.source.NormalizedEvent;
-import com.fusion.connector.ws.transport.JdkHttpClientWsEngine;
+import com.fusion.connector.ws.transport.HttpWsClientEngine;
 import com.fusion.connector.ws.transport.WsClientEngine;
 import org.apache.flink.api.common.functions.OpenContext;
 import org.apache.flink.streaming.api.functions.source.legacy.RichSourceFunction;
@@ -47,7 +45,7 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
         DecoderRegistry<WsTableConfig> reg = new DecoderRegistry<>();
         reg.register(new L2BookDecoder());
         this.adapter = new HyperliquidWsAdapter(reg, UnknownChannelPolicy.DROP);
-        this.engine = new JdkHttpClientWsEngine(cfg.url(), 10_000);
+        this.engine = new HttpWsClientEngine(cfg.url(), 10_000);
         this.engine.setListener(new WsClientEngine.WsMessageListener() {
             @Override
             public void onOpen() {

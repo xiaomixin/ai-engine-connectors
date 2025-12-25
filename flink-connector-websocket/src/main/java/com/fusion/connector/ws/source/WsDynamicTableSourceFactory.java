@@ -1,4 +1,4 @@
-package com.fusion.connector.ws.table;
+package com.fusion.connector.ws.source;
 
 import com.fusion.connector.ws.entity.WsTableConfig;
 import org.apache.flink.configuration.ConfigOption;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.fusion.connector.ws.table.WsConnectorOptions.*;
+import static com.fusion.connector.ws.source.WsConnectorOptions.*;
 
 public class WsDynamicTableSourceFactory implements DynamicTableSourceFactory {
 

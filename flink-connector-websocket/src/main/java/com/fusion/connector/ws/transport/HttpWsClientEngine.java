@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class JdkHttpClientWsEngine implements WsClientEngine {
-    private static final Logger LOG = LoggerFactory.getLogger(JdkHttpClientWsEngine.class);
+public class HttpWsClientEngine implements WsClientEngine {
+    private static final Logger LOG = LoggerFactory.getLogger(HttpWsClientEngine.class);
     private final URI wsUri;
     private final HttpClient httpClient;
     private final ExecutorService callbackExecutor;
@@ -29,11 +29,11 @@ public class JdkHttpClientWsEngine implements WsClientEngine {
     private final Object textBufferLock = new Object();
     private final int maxBufferedChars;
 
-    public JdkHttpClientWsEngine(String wsUrl, int connectTimeoutMs) {
+    public HttpWsClientEngine(String wsUrl, int connectTimeoutMs) {
         this(wsUrl, connectTimeoutMs, 4 * 1024 * 1024); // default 4MB buffer cap
     }
 
-    public JdkHttpClientWsEngine(String wsUrl, int connectTimeoutMs, int maxBufferedChars) {
+    public HttpWsClientEngine(String wsUrl, int connectTimeoutMs, int maxBufferedChars) {
         this.wsUri = URI.create(Objects.requireNonNull(wsUrl, "wsUrl"));
         this.connectTimeout = Duration.ofMillis(Math.max(1000, connectTimeoutMs));
         this.httpClient = HttpClient.newBuilder()

@@ -1,4 +1,4 @@
-package com.fusion.connector.ws.table;
+package com.fusion.connector.ws.source;
 
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
