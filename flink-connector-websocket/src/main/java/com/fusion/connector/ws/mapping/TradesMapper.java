@@ -1,6 +1,7 @@
 package com.fusion.connector.ws.mapping;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fusion.connector.ws.protocol.HyperliquidSubscriptionType;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
@@ -20,19 +21,19 @@ public final class TradesMapper implements ChannelRowMapper {
 
     @Override
     public String channel() {
-        return "trades";
+        return HyperliquidSubscriptionType.HP_TRADES.getTypeValue();
     }
 
     @Override
     public List<RowData> map(JsonNode data) {
-        if (data == null || data.isNull() || data.isMissingNode()) return List.of();
+        if(data == null || data.isNull() || data.isMissingNode()) return List.of();
 
         // data may be an object or an array
-        if (data.isArray()) {
+        if(data.isArray()){
             List<RowData> out = new ArrayList<>();
             for (JsonNode item : data) {
                 RowData r = mapOne(item);
-                if (r != null) out.add(r);
+                if(r != null) out.add(r);
             }
             return out;
         }
@@ -42,7 +43,7 @@ public final class TradesMapper implements ChannelRowMapper {
     }
 
     private RowData mapOne(JsonNode trade) {
-        if (trade == null || trade.isNull() || trade.isMissingNode()) return null;
+        if(trade == null || trade.isNull() || trade.isMissingNode()) return null;
 
         GenericRowData row = new GenericRowData(rowType.getFieldCount());
         for (int c = 0; c < rowType.getFieldCount(); c++) {

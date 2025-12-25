@@ -1,6 +1,9 @@
 package com.fusion.connector.ws.mapping;
 
+import com.fusion.connector.ws.protocol.HyperliquidSubscriptionType;
 import org.apache.flink.table.types.logical.RowType;
+
+import static com.fusion.connector.ws.protocol.HyperliquidSubscriptionType.HP_TRADES;
 
 public class RowMapperFactory {
 
@@ -12,10 +15,9 @@ public class RowMapperFactory {
         if(wsChannel == null || wsChannel.isEmpty()){
             return new GenericJsonProjectMapper(rowType, converter);
         }
-        return switch (wsChannel) {
-            case "trades" -> new TradesMapper(rowType, converter);
-            case "l2Book" -> new L2BookFlattenMapper(rowType, converter);
-            default -> new GenericJsonProjectMapper(rowType, converter);
+        return switch (HyperliquidSubscriptionType.fromChannel(wsChannel)) {
+            case HP_TRADES -> new TradesMapper(rowType, converter);
+            case HP_L2_BOOK -> new L2BookFlattenMapper(rowType, converter);
         };
     }
 }

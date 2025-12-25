@@ -13,6 +13,7 @@ import java.util.List;
 
 public class HyperliquidWsAdapter implements ProtocolAdapter<WsTableConfig> {
     private static final Logger LOG = LoggerFactory.getLogger(HyperliquidWsAdapter.class);
+
     private final ObjectMapper objectMapper;
 
     public HyperliquidWsAdapter() {
@@ -21,30 +22,33 @@ public class HyperliquidWsAdapter implements ProtocolAdapter<WsTableConfig> {
 
     @Override
     public Iterable<String> initialMessages(WsTableConfig config) {
-        if(!"l2Book".equals(config.channel())){
+        HyperliquidSubscriptionType subscriptionType = HyperliquidSubscriptionType.fromChannel(config.channel());
+        if (subscriptionType == null) {
+            LOG.warn("Unsupported channel type: {}", config.channel());
             return List.of();
         }
-        return List.of(buildL2BookInitMessage(config));
+        return List.of(buildSubscribeMessage(subscriptionType, config.symbol()));
     }
 
-    public String buildL2BookInitMessage(WsTableConfig cfg) {
+    private String buildSubscribeMessage(HyperliquidSubscriptionType subscriptionType, String coin) {
         ObjectNode root = objectMapper.createObjectNode();
         root.put("method", "subscribe");
-        ObjectNode sub = root.putObject("subscription");
-        sub.put("type", "l2Book");
-        sub.put("coin", cfg.symbol());
+        ObjectNode subscription = root.putObject("subscription");
+        subscription.put("type", subscriptionType.getTypeValue());
+        subscription.put("coin", coin);
         return root.toString();
     }
 
-    public WsEnvelope parseEnvelope(String message) {
+    @Override
+    public WsEnvelope parseEnvelope(String rawJson) {
         try {
-            JsonNode root = objectMapper.readTree(message);
+            JsonNode root = objectMapper.readTree(rawJson);
             JsonNode channelNode = root.get("channel");
             String channel = (channelNode != null && channelNode.isTextual()) ? channelNode.asText() : null;
             JsonNode data = root.get("data");
             return new WsEnvelope(channel, data);
-        } catch(JsonProcessingException e) {
-            LOG.error(e.getMessage(), e);
+        } catch (JsonProcessingException e) {
+            LOG.error("Failed to parse WebSocket message: {}", rawJson, e);
             return null;
         }
     }

@@ -1,6 +1,7 @@
 package com.fusion.connector.ws.mapping;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fusion.connector.ws.protocol.HyperliquidSubscriptionType;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
@@ -20,7 +21,7 @@ public class L2BookFlattenMapper implements ChannelRowMapper {
 
     @Override
     public String channel() {
-        return "l2Book";
+        return HyperliquidSubscriptionType.HP_L2_BOOK.getTypeValue();
     }
 
     @Override

@@ -16,7 +16,7 @@ CREATE TABLE hl_trades (
   'ws.connect.timeout.ms' = '10000'
 );
 
--- SELECT * FROM hl_trades;
+SELECT * FROM hl_trades;
 
 CREATE TABLE hl_l2book (
   coin STRING,
@@ -37,6 +37,6 @@ CREATE TABLE hl_l2book (
   'ws.connect.timeout.ms' = '10000'
 );
 
-SELECT * FROM hl_l2book;
+-- SELECT * FROM hl_l2book;
 
 
