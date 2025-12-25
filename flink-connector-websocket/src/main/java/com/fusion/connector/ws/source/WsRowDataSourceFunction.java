@@ -8,6 +8,8 @@ import com.fusion.connector.ws.protocol.*;
 import com.fusion.connector.ws.transport.HttpWsClientEngine;
 import com.fusion.connector.ws.transport.WsClientEngine;
 import org.apache.flink.api.common.functions.OpenContext;
+import org.apache.flink.metrics.Counter;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.streaming.api.functions.source.legacy.RichSourceFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
@@ -18,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import static com.fusion.connector.ws.metrics.EstimationTool.estimateBytes;
 
 public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
 
@@ -34,6 +38,11 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
     private transient ArrayBlockingQueue<RowData> queue;
     private transient BoundedBackpressureController backpressure;
 
+    private transient Counter recordsInTotal;
+    private transient Counter bytesInTotal;
+    private transient Counter recordsOutTotal;
+    private transient Counter bytesOutTotal;
+
 
     public WsRowDataSourceFunction(WsTableConfig cfg, DataType producedDataType) {
         this.cfg = cfg;
@@ -42,6 +51,12 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
 
     @Override
     public void open(OpenContext context) throws Exception {
+        MetricGroup metricGroup = getRuntimeContext().getMetricGroup().addGroup("ws");
+        this.recordsInTotal = metricGroup.counter("records_in_total");
+        this.bytesInTotal = metricGroup.counter("bytes_in_total");
+        this.recordsOutTotal = metricGroup.counter("records_out_total");
+        this.bytesOutTotal = metricGroup.counter("bytes_out_total");
+
         this.queue = new ArrayBlockingQueue<>(cfg.queueCapacity());
         this.backpressure = new BoundedBackpressureController(cfg.requestBatch());
 
@@ -67,6 +82,9 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
                     return;
                 }
                 backpressure.onWsMessageArrived();
+                recordsInTotal.inc();
+                bytesInTotal.inc(estimateBytes(message));
+
                 WsEnvelope envelope = adapter.parseEnvelope(message);
                 if(envelope == null || envelope.data() == null){
                     LOG.warn("Failed to parse message or empty data: {}", message);
@@ -112,6 +130,8 @@ public class WsRowDataSourceFunction extends RichSourceFunction<RowData> {
             }
             synchronized (ctx.getCheckpointLock()) {
                 ctx.collect(rowData);
+                this.recordsOutTotal.inc();
+                this.bytesOutTotal.inc(estimateBytes(rowData));
             }
             tryRequestMore();
         }
