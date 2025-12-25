@@ -4,7 +4,7 @@ public interface WsClientEngine {
 
     void connect();
     void close();
-    boolean isConnected();
+    boolean isOpen();
 
     void sendText(String message);
     void request(int n);

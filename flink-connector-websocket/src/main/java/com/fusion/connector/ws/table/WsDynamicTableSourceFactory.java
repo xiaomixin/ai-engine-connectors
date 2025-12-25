@@ -6,6 +6,8 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,6 +16,7 @@ import static com.fusion.connector.ws.table.WsConnectorOptions.*;
 
 public class WsDynamicTableSourceFactory implements DynamicTableSourceFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(WsDynamicTableSourceFactory.class);
     public static final String IDENTIFIER = "ws";
 
     @Override
@@ -68,7 +71,7 @@ public class WsDynamicTableSourceFactory implements DynamicTableSourceFactory {
         }
         final var producedDataType = context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
         final WsTableConfig cfg = new WsTableConfig(url, source, channel, symbol, queueCapacity, requestBatch);
-
+        LOG.info("Creating WsDynamicTableSource with config: {}", cfg);
         return new WsDynamicTableSource(cfg, producedDataType);
     }
 }

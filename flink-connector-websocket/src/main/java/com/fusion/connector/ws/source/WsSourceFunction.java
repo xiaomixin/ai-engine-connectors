@@ -38,7 +38,7 @@ public class WsSourceFunction<C> extends RichSourceFunction<NormalizedEvent> {
     @Override
     public void run(SourceContext<NormalizedEvent> ctx) throws Exception {
         this.running = true;
-        engine.setListener(new WsClientEngine.WsMessageListener() {
+        this.engine.setListener(new WsClientEngine.WsMessageListener() {
             @Override
             public void onOpen() {
                 for (String msg : protocolAdapter.initialMessages(config)) {
@@ -70,12 +70,12 @@ public class WsSourceFunction<C> extends RichSourceFunction<NormalizedEvent> {
                 LOG.info("WebSocket closed: " + statusCode + " - " + reason);
             }
         });
-        engine.connect();
+        this.engine.connect();
     }
 
     private void tryRequestMore() {
         if(!running) return;
-        if(!engine.isConnected()) return;
+        if(!engine.isOpen()) return;
 
         int remainingCapacity = queue.remainingCapacity();
         int toRequest = backpressure.computeToRequest(remainingCapacity);

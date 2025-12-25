@@ -14,8 +14,8 @@ CREATE TABLE hl_l2book (
   'ws.source' = 'hyperliquid',
   'ws.channel' = 'l2Book',
   'ws.symbol' = 'ETH',
-  'ws.queue.capacity' = '50000',
-  'ws.request.batch' = '2000'
+  'ws.queue.capacity' = '50',
+  'ws.request.batch' = '20'
 );
 -- Create print sink table for testing
 CREATE TABLE print_sink (
